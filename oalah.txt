@@ -1,0 +1,36 @@
+//app.put('/coba/:id', [uploadFile.single('foto')], cobaah)
+
+export const cobaah = async (request: Request, response: Response) => {
+    try {
+        const { id } = request.params
+
+        const findOrder = await prisma.order.findFirst({ where: { id: Number(id) } })
+
+        if (!findOrder) return response
+            .status(200)
+            .json({ status: false, message: 'Ra Nemu Order E Sam' })
+        let filename = findOrder.buktiBayar
+        if (request.file) {
+            filename = request.file.filename
+            let path = `${BASE_URL}/../../../bukti-bayar${findOrder.buktiBayar}`
+            let exists = fs.existsSync(path)
+            if (exists && findOrder.buktiBayar !== ``) fs.unlinkSync(path)
+        }
+        const updatePicture = await prisma.order.update({
+            data: { buktiBayar: filename , status:'PAID'},
+            where: { id: Number(id) }
+        })
+
+        return response.json({
+            status: true,
+            data: updatePicture,
+            message: `Berhasil coba`
+        }).status(400)
+        
+    } catch (error) {
+        return response.json({
+            status: false,
+            message: `Gagal Coba`
+        }).status(400)
+    }
+}
